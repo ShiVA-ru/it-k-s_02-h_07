@@ -1,17 +1,26 @@
+import { randomUUID } from "node:crypto";
+import { emailAdapter } from "../../../adapters/email.adapter";
 import { ResultStatus } from "../../../core/types/result.code";
 import type { Result } from "../../../core/types/result.type";
 import { bcryptService } from "../../auth/application/bcrypt.service";
 import { usersRepository } from "../repositories/users.repository";
 import type { UserDb } from "../types/users.db.type";
 import type { UserInput } from "../types/users.input.type";
+import dayjs from "dayjs";
 
 export const usersService = {
-  async create(dto: UserInput): Promise<Result<{ insertedId: string } | null>> {
+  async create(
+    dto: UserInput,
+    isConfirmed: boolean = false,
+  ): Promise<Result<{ insertedId: string } | null>> {
     const { login, password, email } = dto;
 
-    const existUser = await usersRepository.isExistByLoginOrEmail(login, email);
+    const isUserExist = await usersRepository.isExistByLoginOrEmail(
+      login,
+      email,
+    );
 
-    if (existUser) {
+    if (isUserExist) {
       const errorResult: Result<null> = {
         status: ResultStatus.BadRequest,
         errorMessage: "Bad Request",
@@ -28,17 +37,40 @@ export const usersService = {
       email,
       password: passwordHash,
       createdAt: new Date().toISOString(),
+      isEmailConfirmed: isConfirmed,
+      confirmationCode: isConfirmed ? null : randomUUID(),
+      confirmationCodeExpirationDate: isConfirmed
+        ? null
+        : dayjs().add(1, "hour").toISOString(),
     };
+
+    if (!isConfirmed) {
+      emailAdapter
+        .sendEmail(
+          email,
+          `<h1>Thank for your registration</h1>
+         <p>To finish registration please follow the link below:
+            <a href='https://somesite.com/confirm-email?code=${newEntity.confirmationCode}'>complete registration</a>
+         </p>
+         `,
+        )
+        .catch((e) => {
+          console.error(e);
+        });
+    }
+    console.log("confirmationCode", newEntity.confirmationCode);
+    console.log(
+      "confirmationCodeExpirationDate",
+      newEntity.confirmationCodeExpirationDate,
+    );
 
     const insertedId = await usersRepository.create(newEntity);
 
-    const successResult: Result<{ insertedId: string }> = {
+    return {
       status: ResultStatus.Success,
       extensions: [],
       data: { insertedId: insertedId },
     };
-
-    return successResult;
   },
 
   async deleteById(id: string): Promise<boolean> {

@@ -14,6 +14,10 @@ const config = {
   adminPassword: process.env.ADMIN_PASSWORD || "",
   jwtPrivateKey: process.env.JWT_PRIVATE_KEY || "",
   tokenExpireTime: process.env.TOKEN_EXPIRE_TIME || 60,
+  emailAddress: process.env.EMAIL_ADDRESS || "",
+  emailPassword: process.env.EMAIL_PASSWORD || "",
+  smtpAddress: process.env.SMTP_ADDRESS || "",
+  smtpPort: process.env.SMTP_PORT || 465,
 };
 
 export default config;
