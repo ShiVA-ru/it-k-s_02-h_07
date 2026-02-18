@@ -14,7 +14,7 @@ export async function createUserHandler(
   res: Response<UserView | validationErrorType[]>,
 ) {
   try {
-    const result = await usersService.create(req.body);
+    const result = await usersService.create(req.body, true);
 
     if (!isSuccessResult(result)) {
       return res

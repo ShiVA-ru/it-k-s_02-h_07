@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import dayjs from "dayjs";
 import { emailAdapter } from "../../../adapters/email.adapter";
 import { ResultStatus } from "../../../core/types/result.code";
 import type { Result } from "../../../core/types/result.type";
@@ -6,7 +7,6 @@ import { bcryptService } from "../../auth/application/bcrypt.service";
 import { usersRepository } from "../repositories/users.repository";
 import type { UserDb } from "../types/users.db.type";
 import type { UserInput } from "../types/users.input.type";
-import dayjs from "dayjs";
 
 export const usersService = {
   async create(
@@ -21,13 +21,12 @@ export const usersService = {
     );
 
     if (isUserExist) {
-      const errorResult: Result<null> = {
+      return {
         status: ResultStatus.BadRequest,
         errorMessage: "Bad Request",
         data: null,
         extensions: [{ field: "loginOrEmail", message: "Already Registered" }],
       };
-      return errorResult;
     }
 
     const passwordHash = await bcryptService.generateHash(password);
@@ -69,7 +68,7 @@ export const usersService = {
     return {
       status: ResultStatus.Success,
       extensions: [],
-      data: { insertedId: insertedId },
+      data: { insertedId },
     };
   },
 

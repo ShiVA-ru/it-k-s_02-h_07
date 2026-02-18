@@ -3,15 +3,15 @@ import { HttpStatus } from "../../../../core/types/http-statuses.types";
 import type { RequestWithBody } from "../../../../core/types/request.types";
 import { resultCodeToHttpException } from "../../../../core/utils/result-code-to-http-exception";
 import { isSuccessResult } from "../../../../core/utils/type-guards";
-import { usersService } from "../../../users/application/users.service";
-import type { UserInput } from "../../../users/types/users.input.type";
+import { registrationService } from "../../application/auth.registration.service";
+import type { ConfirmationInput } from "../../types/confirmation.input.type";
 
-export async function registrationHandler(
-  req: RequestWithBody<UserInput>,
+export async function registrationConfirmationHandler(
+  req: RequestWithBody<ConfirmationInput>,
   res: Response,
 ) {
   try {
-    const result = await usersService.create(req.body, false);
+    const result = await registrationService.confirmEmail(req.body);
 
     if (!isSuccessResult(result)) {
       return res

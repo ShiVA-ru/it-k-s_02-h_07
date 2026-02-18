@@ -1,7 +1,6 @@
 import { ObjectId, type WithId } from "mongodb";
 import { usersCollection } from "../../../db/mongo";
 import type { UserDb } from "../types/users.db.type";
-import { UserView } from "../types/users.view.type";
 
 export const usersRepository = {
   async create(dto: UserDb): Promise<string> {
@@ -47,5 +46,36 @@ export const usersRepository = {
     }
 
     return item;
+  },
+
+  async findOneByConfirmationCode(
+    code: string,
+  ): Promise<WithId<UserDb> | null> {
+    const item = await usersCollection.findOne({ confirmationCode: code });
+
+    if (!item) {
+      return null;
+    }
+
+    return item;
+  },
+
+  async updateUserConfirmationData(_id: ObjectId): Promise<boolean> {
+    const updateResult = await usersCollection.updateOne(
+      { _id },
+      {
+        $set: {
+          confirmationCode: null,
+          confirmationCodeExpirationDate: null,
+          isEmailConfirmed: true,
+        },
+      },
+    );
+
+    if (updateResult.matchedCount < 1) {
+      return false;
+    }
+
+    return true;
   },
 };
